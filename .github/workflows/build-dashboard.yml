@@ -1,0 +1,74 @@
+name: Build CI dashboard
+
+on:
+  schedule:
+    - cron: "* */4 * * *" # every 4 hours
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - add_dashboard
+      - up_dash
+      - expandDash
+
+permissions:
+  actions: read
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dashboard repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Debug environment
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Actor: $GITHUB_ACTOR"
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "Python version:"
+          python3 --version
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Generate dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
+        run: python scripts/generate_dashboard.py
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Check generated files
+        run: |
+          echo "Listing workspace contents:"
+          ls -R
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

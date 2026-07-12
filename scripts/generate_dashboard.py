@@ -43,7 +43,7 @@ REPOSITORIES_PROJECTS = [
 ]
 
 REPOSITORIES = [REPOSITORIES_PLUGINS, REPOSITORIES_SOFA_PLUGINS, REPOSITORIES_UNITY, REPOSITORIES_PROJECTS]
-SECTION_NAMES = ["IT3D plugins", "SOFA plugins", "Unity repositories", "Projects repositories"]
+SECTION_NAMES = ["IT3D plugins", "SOFA forked plugins", "Unity repositories", "Projects repositories"]
 
 
 TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -265,8 +265,7 @@ td, th {{ border:1px solid #999; padding:8px; }}
 </style>
 </head>
 <body>
-<h1>CI Dashboard V7</h1>
-<p>Last update: {datetime.utcnow()}</p>
+<h1>CI Dashboard v7 - Last update: {datetime.utcnow()}</h1>
 """
 cptSection = 0
 for section in allrows:
@@ -319,6 +318,7 @@ for section in allrows:
             </tr>
         """
     html += "</table>"
+    cptSection += 1
 
 html += """
 </table>

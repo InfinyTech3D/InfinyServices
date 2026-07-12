@@ -68,6 +68,18 @@ def status_color(conclusion):
         return "#e74c3c"   # red
     else:
         return "#f39c12"   # orange
+    
+
+def status_label_color(label):
+    if 'status to review' in label:
+        return "#00aeff"   # blue
+    elif 'status wip' in label:
+        return "#b16a00"   # orange
+    elif 'status ready' in label:
+        return "#00960c"   # green
+    else:
+        return "#444444"   # gray
+
 
 print("===== Dashboard Generation Started =====")
 print("Organization:", ORG)
@@ -137,7 +149,9 @@ for repo_list in REPOSITORIES:
                     "number": pr["number"],
                     "branch": pr["head"]["ref"],
                     "title": pr["title"],
-                    "url": pr["html_url"]
+                    "url": pr["html_url"],
+                    "author": pr["user"]["login"],
+                    "labels": [label["name"] for label in pr["labels"]]
                 })
 
         print("Open PR branches:", open_prs)
@@ -174,7 +188,10 @@ for repo_list in REPOSITORIES:
                     "status": main_run["status"],
                     "conclusion": main_run["conclusion"],
                     "url": run["html_url"],
-                    "date": run["created_at"]
+                    "date": datetime.strptime(
+                        run["created_at"],
+                        "%Y-%m-%dT%H:%M:%SZ"
+                    ).strftime("%Y-%m-%d %H:%M:%S")
                 })
         else:
             print("No main/master run found")
@@ -195,35 +212,42 @@ for repo_list in REPOSITORIES:
         # -----------------------------
         for pr in open_prs:
             branch = pr["branch"]
-            pr_title = pr["title"]
-            pr_number = pr["number"]
-            repo_link = pr["url"]
-
             run = runs_by_branch.get(branch)
 
+            # Get pr: status
+            for label in pr["labels"]:
+                if label.startswith("pr: status"):
+                    status_label = label
+                    break
+
             if run:
-                status = run["status"]
-                conclusion = run["conclusion"]
-                url = run["html_url"]
-                date = run["created_at"]
+                run_status = run["status"]
+                run_conclusion = run["conclusion"]
+                run_url = run["html_url"]
+                run_date = datetime.strptime(
+                    run["created_at"],
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ).strftime("%Y-%m-%d %H:%M:%S")
             else:
                 # No recent workflow run found
-                status = "Unknown"
-                conclusion = "No workflow runs found"
-                url = "#"
-                date = "None"
+                run_status = "Unknown"
+                run_conclusion = "No workflow runs found"
+                run_url = "#"
+                run_date = "None"
 
             rows.append({
                     "repo": repo,
-                    "repo_link": repo_link,
+                    "repo_link": pr["url"],
                     "branch": branch,
                     "is_pr": True,
-                    "title": pr_title,
-                    "pr_number": pr_number,
-                    "status": status,
-                    "conclusion": conclusion,
-                    "url": url,
-                    "date": date
+                    "title": pr["title"],
+                    "pr_number": pr["number"],
+                    "author": pr["author"],
+                    "pr_status_label": status_label,
+                    "status": run_status,
+                    "conclusion": run_conclusion,
+                    "url": run_url,
+                    "date": run_date
                 })
     
         print("Number of rows selected:", len(rows))
@@ -232,21 +256,6 @@ for repo_list in REPOSITORIES:
     for r in rows:
         print("ROW:", r)
 
-
-        # run = runs[0]
-        # status = run["status"]
-        # conclusion = run["conclusion"]
-        # updated = run["updated_at"]
-        # workflow_link = run["html_url"]
-        # branch = run["head_branch"]
-
-        # print("Latest run status:", status)
-        # print("Latest run conclusion:", conclusion)
-        # print("Updated at:", updated)
-        # print(f"Repository: {repo_link}")
-        # print(f"Workflow: {workflow_link}")
-
-        # rows.append((repo, repo_link, branch, status, conclusion, updated, workflow_link))
     
     allrows.append(rows)
 
@@ -265,7 +274,7 @@ td, th {{ border:1px solid #999; padding:8px; }}
 </style>
 </head>
 <body>
-<h1>CI Dashboard v7 - Last update: {datetime.utcnow()}</h1>
+<h1>CI Dashboard v7 - Last update: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")}</h1>
 """
 cptSection = 0
 for section in allrows:
@@ -275,19 +284,21 @@ for section in allrows:
         <tr>
         <th>Repository</th>
         <th>Branch</th>
-        <th>Status</th>
-        <th>Conclusion</th>
-        <th>Last Update</th>
-        <th>CI Run</th>
+        <th>Label Status</th>
+        <th>Author</th>
+
+        <th>Last CI run</th>
+        <th>Run Status</th>
+        <th>Run Conclusion</th>
         </tr>
     """
 
     for row in section:
-        repo_title = row["repo"]
         repo_link = row["repo_link"]
         status = row["status"]
         conclusion = row["conclusion"]
         updated = row["date"]
+        
         workflow_link = row["url"]
         #branch_display = row["branch"]
 
@@ -298,23 +309,31 @@ for section in allrows:
             css = "failure"
 
         color = status_color(conclusion)
+        color_label = status_label_color(status_label)
         
         if row["is_pr"]:
-            repo_title = f" - {row['repo']} (PR #{row['pr_number']})"
+            repo_title = f" - PR #{row['pr_number']}"
             branch_display = f'PR #{row["pr_number"]}: {row["title"]}'
+            author = row["author"]
+            status_label = row["pr_status_label"]
             css_class = "pr"
         else:
+            repo_title = f'<b>{row["repo"]}</b>'
             branch_display = f'<b>{row["branch"]}</b>'
+            status_label = "NA"
+            author = "NA"
             css_class = "main"
 
         html += f"""
             <tr>
-            <td><a href="{repo_link}" target="_blank">{repo_title}</a></td>
-            <td>{branch_display}</td>
+            <td>{repo_title}</td>
+            <td><a href="{repo_link}" target="_blank">{branch_display}</a></td>
+            <td style="color:{color_label}; font-weight:bold;">{status_label}</td>
+            <td>{author}</td>
+
+            <td><a href="{workflow_link}" target="_blank">{updated}</a></td>
             <td style="color:{color}; font-weight:bold;">{status}</td>
             <td style="color:{color}; font-weight:bold;">{conclusion}</td>
-            <td>{updated}</td>
-            <td><a href="{workflow_link}" target="_blank">{workflow_link}</a></td>
             </tr>
         """
     html += "</table>"

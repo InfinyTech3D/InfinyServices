@@ -18,6 +18,14 @@ REPOSITORIES_PLUGINS = [
     "SofaVerseAPI",
 ]
 
+REPOSITORIES_SOFA_PLUGINS = [
+    "CGALPlugin",
+    "Elasticity",
+    "BeamAdapter",
+    "SofaSkeletonPlugin",
+    "SOFA.VTK",
+]
+
 REPOSITORIES_UNITY = [
     "SofaUnity",
     "SofaUnityXR",
@@ -28,22 +36,14 @@ REPOSITORIES_UNITY = [
     "SurgiViz4DServerMDB",
 ]
 
-REPOSITORIES_SOFA_PLUGINS = [
-    "CGALPlugin",
-    "Elasticity",
-    "BeamAdapter",
-    "SofaSkeletonPlugin",
-    "SOFA.VTK",
-]
-
 REPOSITORIES_PROJECTS = [
     "SofaLnRobotics",
     "DigitalTwin",
     "SofaUE5-Renderer",
 ]
 
-REPOSITORIES = [REPOSITORIES_PLUGINS, REPOSITORIES_UNITY, REPOSITORIES_SOFA_PLUGINS, REPOSITORIES_PROJECTS]
-
+REPOSITORIES = [REPOSITORIES_PLUGINS, REPOSITORIES_SOFA_PLUGINS, REPOSITORIES_UNITY, REPOSITORIES_PROJECTS]
+SECTION_NAMES = ["IT3D plugins", "SOFA plugins", "Unity repositories", "Projects repositories"]
 
 
 TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -255,7 +255,7 @@ print("\n===== Generating HTML =====")
 
 os.makedirs("public", exist_ok=True)
 
-html = """
+html = f"""
 <html>
 <head>
 <title>CI Dashboard</title>
@@ -265,20 +265,24 @@ td, th {{ border:1px solid #999; padding:8px; }}
 </style>
 </head>
 <body>
-<h1>CI Dashboard V6</h1>
-<p>Last update: {}</p>
-<table>
-<tr>
-<th>Repository</th>
-<th>Branch</th>
-<th>Status</th>
-<th>Conclusion</th>
-<th>Last Update</th>
-<th>CI Run</th>
-</tr>
-""".format(datetime.utcnow())
-
+<h1>CI Dashboard V7</h1>
+<p>Last update: {datetime.utcnow()}</p>
+"""
+cptSection = 0
 for section in allrows:
+    html += f"""
+        <h2>{SECTION_NAMES[cptSection]}</h2>
+        <table>
+        <tr>
+        <th>Repository</th>
+        <th>Branch</th>
+        <th>Status</th>
+        <th>Conclusion</th>
+        <th>Last Update</th>
+        <th>CI Run</th>
+        </tr>
+    """
+
     for row in section:
         repo_title = row["repo"]
         repo_link = row["repo_link"]
@@ -305,16 +309,16 @@ for section in allrows:
             css_class = "main"
 
         html += f"""
-<tr>
-<td><a href="{repo_link}" target="_blank">{repo_title}</a></td>
-<td>{branch_display}</td>
-<td style="color:{color}; font-weight:bold;">{status}</td>
-<td style="color:{color}; font-weight:bold;">{conclusion}</td>
-<td>{updated}</td>
-<td><a href="{workflow_link}" target="_blank">{workflow_link}</a></td>
-</tr>
-
-"""
+            <tr>
+            <td><a href="{repo_link}" target="_blank">{repo_title}</a></td>
+            <td>{branch_display}</td>
+            <td style="color:{color}; font-weight:bold;">{status}</td>
+            <td style="color:{color}; font-weight:bold;">{conclusion}</td>
+            <td>{updated}</td>
+            <td><a href="{workflow_link}" target="_blank">{workflow_link}</a></td>
+            </tr>
+        """
+    html += "</table>"
 
 html += """
 </table>

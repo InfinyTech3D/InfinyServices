@@ -66,16 +66,19 @@ def status_color(conclusion):
         return "#e74c3c"   # red
     elif conclusion == "API request failed":
         return "#e74c3c"   # red
+    elif conclusion == "No workflow runs found":
+        return "#7e7e7e"   # gray
     else:
         return "#f39c12"   # orange
     
 
 def status_label_color(label):
-    if 'status to review' in label:
-        return "#00aeff"   # blue
-    elif 'status wip' in label:
+    label = label.lower().strip()
+    if "to review" in label:
+        return "#006eff"   # blue
+    elif "wip" in label:
         return "#b16a00"   # orange
-    elif 'status ready' in label:
+    elif "ready" in label:
         return "#00960c"   # green
     else:
         return "#444444"   # gray
@@ -309,7 +312,6 @@ for section in allrows:
             css = "failure"
 
         color = status_color(conclusion)
-        color_label = status_label_color(status_label)
         
         if row["is_pr"]:
             repo_title = f" - PR #{row['pr_number']}"
@@ -323,6 +325,8 @@ for section in allrows:
             status_label = "NA"
             author = "NA"
             css_class = "main"
+
+        color_label = status_label_color(status_label)
 
         html += f"""
             <tr>

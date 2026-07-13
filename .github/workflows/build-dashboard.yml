@@ -2,7 +2,7 @@ name: Build CI dashboard
 
 on:
   schedule:
-    - cron: "* */4 * * *" # every 4 hours
+    - cron: "* */2 * * *" # every 2 hours
   workflow_dispatch:
   push:
     branches:

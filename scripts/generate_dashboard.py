@@ -44,6 +44,7 @@ REPOSITORIES_PROJECTS = [
 
 REPOSITORIES = [REPOSITORIES_PLUGINS, REPOSITORIES_SOFA_PLUGINS, REPOSITORIES_UNITY, REPOSITORIES_PROJECTS]
 SECTION_NAMES = ["IT3D plugins", "SOFA forked plugins", "Unity repositories", "Projects repositories"]
+SECTION_NBR_PR = [0, 0, 0, 0]
 
 
 TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -90,9 +91,10 @@ print("Repositories:", REPOSITORIES)
 print("Token available:", TOKEN is not None)
 
 allrows = []
-
+cptSection = 0
 for repo_list in REPOSITORIES:
     rows = []
+    nbrPR = 0
     for repo in repo_list:
 
         print("\n--------------------------------")
@@ -252,10 +254,12 @@ for repo_list in REPOSITORIES:
                     "url": run_url,
                     "date": run_date
                 })
+            
+            nbrPR += 1
     
-        print("Number of rows selected:", len(rows))
+    SECTION_NBR_PR[cptSection] = nbrPR
+    cptSection += 1
 
-    
     for r in rows:
         print("ROW:", r)
 
@@ -282,7 +286,7 @@ td, th {{ border:1px solid #999; padding:8px; }}
 cptSection = 0
 for section in allrows:
     html += f"""
-        <h2>{SECTION_NAMES[cptSection]}</h2>
+        <h2>{SECTION_NAMES[cptSection]}: Nbr open PR: {SECTION_NBR_PR[cptSection]}</h2>
         <table>
         <tr>
         <th>Repository</th>

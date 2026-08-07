@@ -12,10 +12,10 @@ REPOSITORIES_PLUGINS = [
     "NeedleInsertion",
     "MeshRefinement",
     "Tearing",
-    "SofaHaplyRobotics",
     "VirtualXRay",
     "ImagingUS",
     "SofaVerseAPI",
+    "SofaHaplyRobotics",
 ]
 
 REPOSITORIES_SOFA_PLUGINS = [
@@ -24,6 +24,7 @@ REPOSITORIES_SOFA_PLUGINS = [
     "BeamAdapter",
     "SofaSkeletonPlugin",
     "SOFA.VTK",
+    "ModelOrderReduction",
 ]
 
 REPOSITORIES_UNITY = [
@@ -45,7 +46,7 @@ REPOSITORIES_PROJECTS = [
 REPOSITORIES = [REPOSITORIES_PLUGINS, REPOSITORIES_SOFA_PLUGINS, REPOSITORIES_UNITY, REPOSITORIES_PROJECTS]
 SECTION_NAMES = ["IT3D plugins", "SOFA forked plugins", "Unity repositories", "Projects repositories"]
 SECTION_NBR_PR = [0, 0, 0, 0]
-
+TOTAL_NBR_PR = 0
 
 TOKEN = os.environ.get("GITHUB_TOKEN")
 
@@ -83,6 +84,23 @@ def status_label_color(label):
         return "#00960c"   # green
     else:
         return "#444444"   # gray
+
+
+def pr_background(status_label, run_status):
+    status_label = status_label.lower()
+
+    if "status wip" in status_label:
+        return "#d9d9d9"      # gray
+
+    elif "status to review" in status_label:
+        if run_status == "success":
+            return "#9fd4ff"  # blue
+        elif run_status == "failure":
+            return "#ffb3b3"  # red
+        else:
+            return "#ffd27f"  # orange
+
+    return "white"
 
 
 print("===== Dashboard Generation Started =====")
@@ -258,6 +276,7 @@ for repo_list in REPOSITORIES:
             nbrPR += 1
     
     SECTION_NBR_PR[cptSection] = nbrPR
+    TOTAL_NBR_PR += nbrPR
     cptSection += 1
 
     for r in rows:
@@ -281,7 +300,8 @@ td, th {{ border:1px solid #999; padding:8px; }}
 </style>
 </head>
 <body>
-<h1>CI Dashboard v7 - Last update: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")}</h1>
+<h1>CI Dashboard v8 - Last update: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} | Total PR: {TOTAL_NBR_PR}</h1>
+
 """
 cptSection = 0
 for section in allrows:
@@ -331,10 +351,11 @@ for section in allrows:
             css_class = "main"
 
         color_label = status_label_color(status_label)
+        bg_color = pr_background(status_label, conclusion)
 
         html += f"""
             <tr>
-            <td>{repo_title}</td>
+            <td style="background-color:{bg_color};">{repo_title}</td>
             <td><a href="{repo_link}" target="_blank">{branch_display}</a></td>
             <td style="color:{color_label}; font-weight:bold;">{status_label}</td>
             <td>{author}</td>

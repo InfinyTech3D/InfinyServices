@@ -59,7 +59,7 @@ headers = {
 WORKFLOW_FILE = "ci.yml"
 
 
-def status_color(conclusion):
+def status_run_color(conclusion):
     if conclusion == "success":
         return "#2ecc71"   # green
     elif conclusion == "failure":
@@ -69,7 +69,7 @@ def status_color(conclusion):
     elif conclusion == "API request failed":
         return "#e74c3c"   # red
     elif conclusion == "No workflow runs found":
-        return "#7e7e7e"   # gray
+        return "#979797"   # gray
     else:
         return "#f39c12"   # orange
     
@@ -300,7 +300,7 @@ td, th {{ border:1px solid #999; padding:8px; }}
 </style>
 </head>
 <body>
-<h1>CI Dashboard v8 - Last update: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} | Total PR: {TOTAL_NBR_PR}</h1>
+<h1>CI Dashboard v8 - Last update: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} | Total Nbr open PR: {TOTAL_NBR_PR}</h1>
 
 """
 cptSection = 0
@@ -335,8 +335,7 @@ for section in allrows:
         elif conclusion == "failure":
             css = "failure"
 
-        color = status_color(conclusion)
-        
+        # Get all info from the arrays and prepare texts for the table raw
         if row["is_pr"]:
             repo_title = f" - PR #{row['pr_number']}"
             branch_display = f'PR #{row["pr_number"]}: {row["title"]}'
@@ -350,19 +349,33 @@ for section in allrows:
             author = "NA"
             css_class = "main"
 
+        # Compute colors for text and bg
+        color_run = status_run_color(conclusion)
         color_label = status_label_color(status_label)
-        bg_color = pr_background(status_label, conclusion)
+
+        if row["is_pr"]:
+            bg_color_repo = pr_background(status_label, conclusion)
+            bg_color_raw = "white"
+        else:
+            if conclusion == "failure":
+                bg_color_raw = "#bd6969"   # Broken main branch
+            elif conclusion == "success":
+                bg_color_raw = "#79af68"   # Healthy CI
+            else:
+                bg_color_raw = "#A7A7A7"   # Healthy or no CI
+            bg_color_repo = bg_color_raw
+
 
         html += f"""
             <tr>
-            <td style="background-color:{bg_color};">{repo_title}</td>
-            <td><a href="{repo_link}" target="_blank">{branch_display}</a></td>
-            <td style="color:{color_label}; font-weight:bold;">{status_label}</td>
-            <td>{author}</td>
+            <td style="background-color:{bg_color_repo};">{repo_title}</td>
+            <td style="background-color:{bg_color_raw}";><a href="{repo_link}" target="_blank">{branch_display}</a></td>
+            <td style="background-color:{bg_color_raw}; color:{color_label}; font-weight:bold;">{status_label}</td>
+            <td style="background-color:{bg_color_raw};">{author}</td>
 
             <td><a href="{workflow_link}" target="_blank">{updated}</a></td>
-            <td style="color:{color}; font-weight:bold;">{status}</td>
-            <td style="color:{color}; font-weight:bold;">{conclusion}</td>
+            <td style="color:{color_run}; font-weight:bold;">{status}</td>
+            <td style="color:{color_run}; font-weight:bold;">{conclusion}</td>
             </tr>
         """
     html += "</table>"

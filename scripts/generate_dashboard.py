@@ -6,15 +6,16 @@ ORG = "InfinyTech3D"
 
 REPOSITORIES_PLUGINS = [
     "InfinyToolkit",
+    "InfinyCore",
     "InfinyPrefabs",
+    "SofaVerseAPI",
     "CollisionAlgorithm",
     "ConstraintGeometry",
     "NeedleInsertion",
     "MeshRefinement",
     "Tearing",
     "VirtualXRay",
-    "ImagingUS",
-    "SofaVerseAPI",
+    "ImagingUS",    
     "SofaHaplyRobotics",
 ]
 
